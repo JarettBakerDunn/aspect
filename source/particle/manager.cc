@@ -34,6 +34,7 @@
 #include <boost/archive/text_oarchive.hpp>
 #include <boost/archive/text_iarchive.hpp>
 
+#include <aspect/postprocess/particle_pdf.h>
 namespace aspect
 {
   namespace Particle
@@ -353,7 +354,14 @@ namespace aspect
                 else if ((particle_load_balancing & ParticleLoadBalancing::remove_particles) &&
                          (n_particles_in_cell > max_particles_per_cell))
                   {
+                    Postprocess::ParticlePDF<dim> pdf;
+                    
                     const unsigned int n_particles_to_remove = n_particles_in_cell - max_particles_per_cell;
+                    
+
+
+                    
+                    /*
                     for (unsigned int i=0; i < n_particles_to_remove; ++i)
                       {
                         const unsigned int current_n_particles_in_cell = particle_handler->n_particles_in_cell(cell);
@@ -364,7 +372,7 @@ namespace aspect
                         std::advance(particle_to_remove, index_to_remove);
                         particle_handler->remove_particle(particle_to_remove);
                       }
-
+                    */
                   }
               }
 
