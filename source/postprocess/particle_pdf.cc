@@ -21,6 +21,7 @@
 #include <aspect/postprocess/particle_pdf.h>
 
 
+
 namespace aspect
 {
   namespace Postprocess
@@ -173,7 +174,7 @@ namespace aspect
       if (input_value > max)
         {
           max = input_value;
-          min_particle_index = reference_particle_id;
+          max_particle_index = reference_particle_id;
         }
 
       if (input_value < min)
@@ -337,6 +338,22 @@ namespace aspect
     double ParticlePDF<dim>::get_standard_deviation()
     {
       return standard_deviation;
+    }
+
+
+
+    template <int dim>
+    types::particle_index ParticlePDF<dim>::get_max_particle()
+    {
+        return max_particle_index;
+    }
+
+
+
+    template <int dim>
+    types::particle_index ParticlePDF<dim>::get_min_particle()
+    {
+        return min_particle_index;
     }
 
 

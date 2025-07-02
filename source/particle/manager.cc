@@ -33,6 +33,7 @@
 #include <boost/serialization/map.hpp>
 #include <boost/archive/text_oarchive.hpp>
 #include <boost/archive/text_iarchive.hpp>
+#include <aspect/postprocess/particle_pdf.h>
 
 namespace aspect
 {
@@ -357,11 +358,24 @@ namespace aspect
                     for (unsigned int i=0; i < n_particles_to_remove; ++i)
                       {
                         const unsigned int current_n_particles_in_cell = particle_handler->n_particles_in_cell(cell);
-                        const unsigned int index_to_remove = std::uniform_int_distribution<unsigned int>
-                                                             (0,current_n_particles_in_cell-1)(random_number_generator);
+                        Postprocess::ParticlePDF<dim> pdf(0.3,Postprocess::ParticlePDF<dim>::KernelFunctions::cutoff_function_w1_dealii);
+                        pdf.fill_from_particle_range(particle_handler->particles_in_cell(cell),current_n_particles_in_cell);
+                        pdf.compute_statistical_values();
+                     
+                        const unsigned int index_max = pdf.get_max_particle();
+                        /*
+                          There must be a more elegant method than a while loop.
+                          Or at least, what is a good check to make sure that this does not loop indefinitely.
+                          particle_to_remove has a particle_index_within_cell variable.
+                          Is there an equivalent for index_max? Can we get that particle directly in a way
+                          that particle_handler->remove_particle() will work on?
 
+                          //if pdf.get_max_particle returned the the local index of the particle this could be improved.
+                        */
                         auto particle_to_remove = particle_handler->particles_in_cell(cell).begin();
-                        std::advance(particle_to_remove, index_to_remove);
+                        while(particle_to_remove->get_id() != index_max && particle_to_remove != particle_handler->particles_in_cell(cell).end()){
+                          ++particle_to_remove;
+                        }
                         particle_handler->remove_particle(particle_to_remove);
                       }
 
