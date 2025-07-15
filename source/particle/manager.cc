@@ -358,27 +358,32 @@ namespace aspect
                     for (unsigned int i=0; i < n_particles_to_remove; ++i)
                       {
                         const unsigned int current_n_particles_in_cell = particle_handler->n_particles_in_cell(cell);
-                        Postprocess::ParticlePDF<dim> pdf(0.3,Postprocess::ParticlePDF<dim>::KernelFunctions::cutoff_function_w1_dealii);
-                        pdf.fill_from_particle_range(particle_handler->particles_in_cell(cell),current_n_particles_in_cell);
-                        pdf.compute_statistical_values();
-                     
-                        const unsigned int index_max = pdf.get_max_particle();
-                        /*
-                          There must be a more elegant method than a while loop.
-                          Or at least, what is a good check to make sure that this does not loop indefinitely.
-                          particle_to_remove has a particle_index_within_cell variable.
-                          Is there an equivalent for index_max? Can we get that particle directly in a way
-                          that particle_handler->remove_particle() will work on?
+                       
+                        if (deletion_algorithm == DeletionAlgorithm::point_density_function)
+                        {
+                          Postprocess::ParticlePDF<dim> pdf(0.3,Postprocess::ParticlePDF<dim>::KernelFunctions::cutoff_function_w1_dealii);
+                          pdf.fill_from_particle_range(particle_handler->particles_in_cell(cell),current_n_particles_in_cell);
+                          pdf.compute_statistical_values();
 
-                          //if pdf.get_max_particle returned the the local index of the particle this could be improved.
-                        */
-                        auto particle_to_remove = particle_handler->particles_in_cell(cell).begin();
-                        while(particle_to_remove->get_id() != index_max && particle_to_remove != particle_handler->particles_in_cell(cell).end()){
-                          ++particle_to_remove;
+                          const unsigned int index_max = pdf.get_max_particle();
+                          auto particle_to_remove = particle_handler->particles_in_cell(cell).begin();
+                          while (particle_to_remove->get_id() != index_max && particle_to_remove != particle_handler->particles_in_cell(cell).end())
+                            {
+                              ++particle_to_remove;
+                            }
+                          particle_handler->remove_particle(particle_to_remove);
                         }
-                        particle_handler->remove_particle(particle_to_remove);
-                      }
+                        else if (deletion_algorithm == DeletionAlgorithm::random)
+                        {
+                          const unsigned int current_n_particles_in_cell = particle_handler->n_particles_in_cell(cell);
+                          const unsigned int index_to_remove = std::uniform_int_distribution<unsigned int>
+                                                              (0,current_n_particles_in_cell-1)(random_number_generator);
 
+                          auto particle_to_remove = particle_handler->particles_in_cell(cell).begin();
+                          std::advance(particle_to_remove, index_to_remove);
+                          particle_handler->remove_particle(particle_to_remove);
+                        }
+                      }
                   }
               }
 
@@ -826,6 +831,9 @@ namespace aspect
                                                             "remove and add particles|repartition"),
                                "Strategy that is used to balance the computational "
                                "load across processors for adaptive meshes.");
+            prm.declare_entry ("Deletion algorithm", "random",
+                               Patterns::MultipleSelection ("random|point density function"),
+                               "Algorithm used to delete excess particles from cells.");
             prm.declare_entry ("Minimum particles per cell", "0",
                                Patterns::Integer (0),
                                "Lower limit for particle number per cell. This limit is "
@@ -977,6 +985,12 @@ namespace aspect
             // across all particle managers.
             return (particle_manager == 0) ? 1000 + this->cell_weight(cell, status) : this->cell_weight(cell, status);
           });
+
+        deletion_algorithm = DeletionAlgorithm::random;
+        std::string deletion_algorithm_string = prm.get("Deletion algorithm");
+
+        if (deletion_algorithm_string == "point density function")
+          deletion_algorithm = DeletionAlgorithm::point_density_function;
 
 
         TimerOutput::Scope timer_section(this->get_computing_timer(), "Particles: Initialization");
