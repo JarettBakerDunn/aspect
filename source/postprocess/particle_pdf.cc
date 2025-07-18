@@ -345,7 +345,7 @@ namespace aspect
     template <int dim>
     types::particle_index ParticlePDF<dim>::get_max_particle()
     {
-        return max_particle_index;
+      return max_particle_index;
     }
 
 
@@ -353,7 +353,7 @@ namespace aspect
     template <int dim>
     types::particle_index ParticlePDF<dim>::get_min_particle()
     {
-        return min_particle_index;
+      return min_particle_index;
     }
 
 
