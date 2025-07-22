@@ -361,7 +361,7 @@ namespace aspect
 
                         if (deletion_algorithm == DeletionAlgorithm::point_density_function)
                           {
-                            Postprocess::ParticlePDF<dim> pdf(0.3,Postprocess::ParticlePDF<dim>::KernelFunctions::cutoff_function_w1_dealii);
+                            Postprocess::ParticlePDF<dim> pdf(0.3,kernel_function);
                             pdf.fill_from_particle_range(particle_handler->particles_in_cell(cell),current_n_particles_in_cell);
                             pdf.compute_statistical_values();
 
