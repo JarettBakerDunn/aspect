@@ -834,6 +834,9 @@ namespace aspect
             prm.declare_entry ("Deletion algorithm", "random",
                                Patterns::MultipleSelection ("random|point density function"),
                                "Algorithm used to delete excess particles from cells.");
+            prm.declare_entry ("Point density kernel function", "cutoff w1 dealii",
+                               Patterns::MultipleSelection ("cutoff w1 dealii|uniform|triangular|gaussian"),
+                               "Algorithm used to delete excess particles from cells.");
             prm.declare_entry ("Minimum particles per cell", "0",
                                Patterns::Integer (0),
                                "Lower limit for particle number per cell. This limit is "
@@ -986,12 +989,25 @@ namespace aspect
             return (particle_manager == 0) ? 1000 + this->cell_weight(cell, status) : this->cell_weight(cell, status);
           });
 
+        // The deletion algorithm to use when there are too many particles in a cell
         deletion_algorithm = DeletionAlgorithm::random;
         std::string deletion_algorithm_string = prm.get("Deletion algorithm");
 
         if (deletion_algorithm_string == "point density function")
           deletion_algorithm = DeletionAlgorithm::point_density_function;
 
+        // The kernel function to use when using the point density function deletion algorithm
+        kernel_function = Postprocess::ParticlePDF<dim>::KernelFunctions::cutoff_function_w1_dealii;
+        std::string kernel_function_string = prm.get("Point density kernel function");
+
+        if (kernel_function_string == "uniform")
+          kernel_function =  Postprocess::ParticlePDF<dim>::KernelFunctions::uniform;
+
+        else if (kernel_function_string == "triangular")
+          kernel_function =  Postprocess::ParticlePDF<dim>::KernelFunctions::triangular;
+
+        else if (kernel_function_string == "gaussian")
+          kernel_function =  Postprocess::ParticlePDF<dim>::KernelFunctions::gaussian;
 
         TimerOutput::Scope timer_section(this->get_computing_timer(), "Particles: Initialization");
 

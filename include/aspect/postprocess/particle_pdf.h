@@ -27,6 +27,9 @@
 #include <limits>
 #include <deal.II/base/table.h>
 #include <deal.II/particles/property_pool.h>
+#include <aspect/particle/manager.h>
+#include <deal.II/base/function_lib.h>
+
 namespace aspect
 {
   namespace Postprocess
@@ -85,7 +88,7 @@ namespace aspect
          * @param particle_range The particle_iterator_range to operate on.
          * @param n_particles_in_cell The number of particles belonging to the particle manager in question within the cell.
          */
-        void fill_from_particle_range(const typename Particle::ParticleHandler<dim>::particle_iterator_range particle_range,
+        void fill_from_particle_range(const typename Particle::Generator::ParticleHandler<dim>::particle_iterator_range particle_range,
                                       const unsigned int n_particles_in_cell);
 
         /**
@@ -102,7 +105,7 @@ namespace aspect
           const Point<dim> reference_point,
           std::array<unsigned int,dim> table_index,
           const unsigned int n_particles_in_cell,
-          const typename Particle::ParticleHandler<dim>::particle_iterator_range particle_range);
+          const typename Particle::Generator::ParticleHandler<dim>::particle_iterator_range particle_range);
 
         /**
          * Inserts a value into the point-density function.

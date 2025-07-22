@@ -45,6 +45,8 @@
 
 #include <boost/serialization/unique_ptr.hpp>
 
+#include <aspect/postprocess/particle_pdf.h>
+
 namespace aspect
 {
   template <int dim>
@@ -310,6 +312,8 @@ namespace aspect
           random,
           point_density_function,
         };
+
+        typename Postprocess::ParticlePDF<dim>::KernelFunctions kernel_function;
 
         /**
          * Generation scheme for creating particles in this manager
