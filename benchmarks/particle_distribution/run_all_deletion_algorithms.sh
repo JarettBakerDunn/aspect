@@ -5,7 +5,7 @@
 # > >> are used to append, cat concatenates
 
 
-processes=4
+processes=2
 ASPECT_EXEC="../../build/aspect"
 
 # ------------------------------------Oscillating velocity------------------------------------ #
@@ -23,7 +23,7 @@ echo "subsection Particles" >> current.prm
 echo "  set Deletion algorithm = random" >> current.prm
 echo "end" >> current.prm
 echo "set Output directory = output-random" >> current.prm
-cat particle_density_gradient.prm current.prm | mpirun -np $processes $ASPECT_EXEC --
+cat deletion_algorithm_benchmarks.prm current.prm | mpirun -np $processes $ASPECT_EXEC --
 
 # Cutoff_w1 (the default kernel function)
 echo "subsection Prescribed Stokes solution" > current.prm
@@ -35,7 +35,7 @@ echo "  set Function expression = 0; (-0.5*sin(pi*t)) +velConstant" >> current.p
 echo " end" >> current.prm
 echo "end" >> current.prm
 echo "set Output directory = output-cutoff-w1" >> current.prm
-cat particle_density_gradient.prm current.prm | mpirun -np $processes $ASPECT_EXEC --
+cat deletion_algorithm_benchmarks.prm current.prm | mpirun -np $processes $ASPECT_EXEC --
 
 
 # Uniform kernel function
@@ -51,7 +51,7 @@ echo "subsection Particles" >> current.prm
 echo "  set Point density kernel function = uniform" >> current.prm
 echo "end" >> current.prm
 echo "set Output directory = output-uniform" >> current.prm
-cat particle_density_gradient.prm current.prm | mpirun -np $processes $ASPECT_EXEC --
+cat deletion_algorithm_benchmarks.prm current.prm | mpirun -np $processes $ASPECT_EXEC --
 
 
 # Gaussian kernel function
@@ -67,7 +67,7 @@ echo "subsection Particles" >> current.prm
 echo "  set Point density kernel function = gaussian" >> current.prm
 echo "end" >> current.prm
 echo "set Output directory = output-gaussian" >> current.prm
-cat particle_density_gradient.prm current.prm | mpirun -np $processes $ASPECT_EXEC --
+cat deletion_algorithm_benchmarks.prm current.prm | mpirun -np $processes $ASPECT_EXEC --
 
 
 # Triangular kernel function
@@ -83,7 +83,7 @@ echo "subsection Particles" >> current.prm
 echo "  set Point density kernel function = triangular" >> current.prm
 echo "end" >> current.prm
 echo "set Output directory = output-triangular" >> current.prm
-cat particle_density_gradient.prm current.prm | mpirun -np $processes $ASPECT_EXEC --
+cat deletion_algorithm_benchmarks.prm current.prm | mpirun -np $processes $ASPECT_EXEC --
 
 # ------------------------------------Constant velocity------------------------------------ #
 
@@ -100,7 +100,7 @@ echo "subsection Particles" >> current.prm
 echo "  set Deletion algorithm = random" >> current.prm
 echo "end" >> current.prm
 echo "set Output directory = output-random-constant-velocity" >> current.prm
-cat particle_density_gradient.prm current.prm | mpirun -np $processes $ASPECT_EXEC --
+cat deletion_algorithm_benchmarks.prm current.prm | mpirun -np $processes $ASPECT_EXEC --
 
 # Cutoff-w1 kernel function
 echo "subsection Prescribed Stokes solution" > current.prm
@@ -112,7 +112,7 @@ echo "  set Function expression = 0; velSlow" >> current.prm
 echo " end" >> current.prm
 echo "end" >> current.prm
 echo "set Output directory = output-cutoff-w1-constant-velocity" >> current.prm
-cat particle_density_gradient.prm current.prm | mpirun -np $processes $ASPECT_EXEC --
+cat deletion_algorithm_benchmarks.prm current.prm | mpirun -np $processes $ASPECT_EXEC --
 
 
 # Uniform kernel function
@@ -128,7 +128,7 @@ echo "subsection Particles" >> current.prm
 echo "  set Point density kernel function = uniform" >> current.prm
 echo "end" >> current.prm
 echo "set Output directory = output-uniform-constant-velocity" >> current.prm
-cat particle_density_gradient.prm current.prm | mpirun -np $processes $ASPECT_EXEC --
+cat deletion_algorithm_benchmarks.prm current.prm | mpirun -np $processes $ASPECT_EXEC --
 
 
 # Gaussian kernel function
@@ -144,7 +144,7 @@ echo "subsection Particles" >> current.prm
 echo "  set Point density kernel function = gaussian" >> current.prm
 echo "end" >> current.prm
 echo "set Output directory = output-gaussian-constant-velocity" >> current.prm
-cat particle_density_gradient.prm current.prm | mpirun -np $processes $ASPECT_EXEC --
+cat deletion_algorithm_benchmarks.prm current.prm | mpirun -np $processes $ASPECT_EXEC --
 
 
 # Triangular kernel function
@@ -160,7 +160,10 @@ echo "subsection Particles" >> current.prm
 echo "  set Point density kernel function = triangular" >> current.prm
 echo "end" >> current.prm
 echo "set Output directory = output-triangular-constant-velocity" >> current.prm
-cat particle_density_gradient.prm current.prm | mpirun -np $processes $ASPECT_EXEC --
+cat deletion_algorithm_benchmarks.prm current.prm | mpirun -np $processes $ASPECT_EXEC --
+
+# Remove the temporary .prm file
+rm current.prm
 
 # ------------------------------------Calculate Averages--------------------------------------- #
 
