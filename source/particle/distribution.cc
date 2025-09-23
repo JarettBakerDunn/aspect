@@ -19,7 +19,7 @@
 */
 
 #include <aspect/particle/distribution.h>
-
+#include <aspect/particle/manager.h>
 
 namespace aspect
 {
@@ -133,7 +133,7 @@ namespace aspect
                       const auto &kernel_coordinates = kernel_position_particle.get_location();
                       const double distance = particle_coordinates.distance(kernel_coordinates);
                       const double distance_normalized = distance/cell_diameter_scaled_to_dimensions;
-                      function_value += apply_selected_kernel_function(distance_normalized,1.0/cell_diameter_scaled_to_dimensions);
+                      function_value += apply_selected_kernel_function(distance_normalized);
                     }
                 }
 
@@ -156,7 +156,7 @@ namespace aspect
         {
           const auto coordinates = particle.get_reference_location();
           const double distance = coordinates.distance(reference_point);
-          const double kernel_function_value = apply_selected_kernel_function(distance,1.0);
+          const double kernel_function_value = apply_selected_kernel_function(distance);
           add_value_to_function_table(table_index,kernel_function_value/n_particles_in_cell);
         }
     }
@@ -370,24 +370,8 @@ namespace aspect
 
 
     template <int dim>
-    types::particle_index ParticlePDF<dim>::get_max_particle() const
-    {
-      return max_particle_index;
-    }
-
-
-
-    template <int dim>
-    types::particle_index ParticlePDF<dim>::get_min_particle() const
-    {
-      return min_particle_index;
-    }
-
-
-
-    template <int dim>
     double
-    ParticlePDF<dim>::apply_selected_kernel_function(const double distance, const double distance_max) const
+    ParticlePDF<dim>::apply_selected_kernel_function(const double distance) const
     {
       if (kernel_function == KernelFunction::uniform)
         {
@@ -395,7 +379,7 @@ namespace aspect
         }
       else if (kernel_function == KernelFunction::triangular)
         {
-          return kernelfunction_triangular(distance, distance_max);
+          return kernelfunction_triangular(distance);
         }
       else if (kernel_function == KernelFunction::gaussian)
         {
@@ -438,11 +422,11 @@ namespace aspect
 
     template <int dim>
     double
-    ParticlePDF<dim>::kernelfunction_triangular(double distance, double distance_max) const
+    ParticlePDF<dim>::kernelfunction_triangular(double distance) const
     {
       if (distance < bandwidth)
         {
-          return (distance_max-distance)*bandwidth;
+          return (distance)*bandwidth;
         }
       else
         {

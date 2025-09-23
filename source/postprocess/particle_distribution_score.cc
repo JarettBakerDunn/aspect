@@ -20,9 +20,7 @@
 
 
 #include <aspect/postprocess/particle_distribution_score.h>
-
-
-
+#include <aspect/particle/manager.h>
 
 
 namespace aspect
@@ -35,7 +33,6 @@ namespace aspect
     {
       double local_min_score = std::numeric_limits<double>::max();
       double local_max_score = 0;
-      double global_score = 0;
       unsigned int number_of_cells = 0;
       /*
       The calculation of standard deviation should not include empty cells
@@ -131,9 +128,6 @@ namespace aspect
 
                   cell_scores.push_back(distribution_score_current_cell);
 
-                  // summing to take average later
-                  global_score += distribution_score_current_cell;
-
                   local_max_score = std::max(local_max_score, distribution_score_current_cell);
                   local_min_score = std::min(local_min_score, distribution_score_current_cell);
                 }
@@ -143,33 +137,28 @@ namespace aspect
                   // The score should be bad if there are no particles in a cell
                   const double distribution_score_current_cell = 1.0;
                   cell_scores.push_back(distribution_score_current_cell);
-                  global_score += distribution_score_current_cell;
                   local_max_score = std::max(local_max_score, distribution_score_current_cell);
                   local_min_score = std::min(local_min_score, distribution_score_current_cell);
                 }
             }
         }
 
-      // Get the cell score vector from all of the processors.
-      std::vector<double> global_cell_scores =
-        Utilities::MPI::compute_set_union (cell_scores,this->get_mpi_communicator());
-      const double standard_deviation_of_cell_scores = compute_standard_deviation(global_cell_scores);
+      // Calculate the mean and standard deviation of cell scores across all processors
+      std::pair<double, typename numbers::NumberTraits<double>::real_type> mean_and_standard_deviation
+        =Utilities::MPI::mean_and_standard_deviation(cell_scores.begin(),cell_scores.end(),this->get_mpi_communicator());
 
-      // get final values from all processors
+      // get final values for min and max score from all processors
       const double global_max_score = Utilities::MPI::max (local_max_score, this->get_mpi_communicator());
       const double global_min_score = Utilities::MPI::min (local_min_score, this->get_mpi_communicator());
-      const double summed_score = Utilities::MPI::sum (global_score, this->get_mpi_communicator());
-      const double global_number_of_cells = Utilities::MPI::sum (number_of_cells, this->get_mpi_communicator());
-      const double average_score = summed_score / global_number_of_cells;
 
       // write to statistics file
       statistics.add_value ("Minimal particle distribution score: ", global_min_score);
-      statistics.add_value ("Average particle distribution score: ", average_score);
+      statistics.add_value ("Average particle distribution score: ", mean_and_standard_deviation.first);
       statistics.add_value ("Maximal particle distribution score: ", global_max_score);
-      statistics.add_value ("Cell Score Standard Deviation: ", standard_deviation_of_cell_scores);
+      statistics.add_value ("Cell Score Standard Deviation: ", mean_and_standard_deviation.second);
 
       std::ostringstream output;
-      output << global_min_score << '/' <<average_score << '/' << global_max_score << '/' << standard_deviation_of_cell_scores;
+      output << global_min_score << '/' << mean_and_standard_deviation.first << '/' << global_max_score << '/' << mean_and_standard_deviation.second;
 
       return std::pair<std::string, std::string> ("Particle distribution score min/avg/max/stdev:",
                                                   output.str());
@@ -238,35 +227,6 @@ namespace aspect
               ++buckets(entry_index);
             }
         }
-    }
-
-
-
-    template <int dim>
-    double ParticleDistributionScore<dim>::compute_standard_deviation(std::vector<double> &cell_scores) const
-    {
-      double mean = 0;
-      const int cell_score_size = cell_scores.size();
-
-      // Loop through the vector and compute the sum.
-      for (const double this_value : cell_scores)
-        {
-          mean += this_value;
-        }
-
-      // Compute the mean.
-      mean /= cell_score_size;
-      double squared_deviation_sum = 0;
-
-      // Sum all the squared deviations for standard deviation
-      for (const double this_value : cell_scores)
-        {
-          const double deviation_squared = (this_value-mean)*(this_value-mean);
-          squared_deviation_sum += deviation_squared;
-        }
-      const double squared_deviation_mean = squared_deviation_sum / cell_score_size;
-      double standard_deviation = std::sqrt(squared_deviation_mean);
-      return standard_deviation;
     }
 
 
