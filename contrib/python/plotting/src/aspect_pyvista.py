@@ -54,7 +54,10 @@ def render_mesh_2d(
               arrows_cmap:plt.colors.ListedColormap | None = cm.imola,
               arrows_scale:float | None = 0.08,
               arrows_normalize:bool | None = None,
-              draw_scalarbar:bool | None = True, 
+              scalarbar_enable:bool | None = True, 
+              axisFormat:str | None = "%.0f",
+              axisPadding:float | None = 0.015,
+              gridEnable:bool | None = False,
               sargs: dict[str, Any] | None = None,
               window_size:Sequence[int] = (1024,1024),
               x_title:str | None = "X Axis(m)",
@@ -87,7 +90,7 @@ def render_mesh_2d(
         arrows_median_normalize: Optional vector array (e.g. the velocity of
             another run) whose median magnitude normalizes arrow sizes, so
             arrows from two panels with different magnitudes compare visually.
-        draw_scalarbar: Whether to show the scalar bar. Defaults to ``True``.
+        scalarbar_enable: Whether to show the scalar bar. Defaults to ``True``.
         sargs: Optional dict of scalar-bar arguments, passed through to pyvista's
             ``scalar_bar_args`` and overrides the pyvista defaults. The title of 
             the scalar bar is set to the full name of the field. The mapping between
@@ -120,8 +123,13 @@ def render_mesh_2d(
         clim = [mesh[scalars].min(), mesh[scalars].max()]
 
     # Make room for the scalar bar if there is one
-    if (draw_scalarbar == True):
+    if (scalarbar_enable == True):
         mesh = mesh.scale(0.80)
+        mesh_grid = mesh_grid.scale(0.80)
+
+    # If drawing grid, extract the grid.
+    if (gridEnable):
+        mesh_grid = mesh.extract_all_edges()
 
     if (arrows_enabled == True):
         # median velocity for arrow scaling
@@ -160,7 +168,9 @@ def render_mesh_2d(
         )
 
     mesh_actor = plotter.add_mesh(mesh, scalars=scalars, cmap=cmap, clim=clim,
-                    lighting=False, show_scalar_bar=draw_scalarbar,scalar_bar_args=sargs)
+                    lighting=False, show_scalar_bar=scalarbar_enable,scalar_bar_args=sargs)
+
+    grid_actor = plotter.add_mesh(mesh_grid, color="ivory_black", style="wireframe",line_width=0.3, opacity=1)
     
     # straight-down 2d camera; parallel_scale fits the render exactly onto the domain bounds
     plotter.camera_position = "xy"
@@ -175,16 +185,20 @@ def render_mesh_2d(
     ticks='outside',
     xtitle=x_title,ytitle=y_title,
     grid=None,
-    fmt='%.0f',
+    fmt=axisFormat,
     n_xlabels=n_x_labels,
     n_ylabels=n_y_labels,
+    padding=axisPadding
     )
 
     # If drawing the scalar bar, move the camera upwards to
     # make room for the scalar bar under it. Need to move the
     # camera after setting camera_position to "xy", not before.
-    if (draw_scalarbar):
-        camera_translate(plotter,[0,-0.09*size,0])
+    if (scalarbar_enable):
+        if (sargs.get("vertical")==False):
+            camera_translate(plotter,[0,-0.09*size,0])
+        else:
+            camera_translate(plotter,[-0.09*size,0,0])
 
     img = plotter.screenshot(return_img=True)
     plotter.close()
